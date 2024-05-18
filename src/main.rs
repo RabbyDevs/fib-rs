@@ -1,11 +1,8 @@
 use std::fs::File;
-use std::{io, thread};
+use std::io;
 use std::time::SystemTime;
 use io::{stdin, stdout, Write, Read};
 use num::bigint::BigUint;
-use num::traits::{One, Zero};
-use std::sync::mpsc;
-use std::array::from_fn;
 
 fn new_parameter(ask_string: &str) -> String {
     println!("{}", ask_string);
@@ -17,55 +14,32 @@ fn new_parameter(ask_string: &str) -> String {
     parameter.trim_end().to_string()
 }
 
-fn matrix_multiply(a: &[[BigUint; 2]; 2], b: &[[BigUint; 2]; 2]) -> [[BigUint; 2]; 2] {
-    let c = from_fn(|i| {
-        from_fn(|j| {
-            // (&a[i][0] * &b[0][j]).clone() + (&a[i][1] * &b[1][j]).clone()
-            let (tx, rx) = mpsc::channel::<BigUint>();
-            let (tp, rp) = mpsc::channel::<BigUint>();
-            let matrix_value1 = a[i][0].clone();
-            let matrix_value2 = b[0][j].clone();
-            let matrix_value3 = a[i][1].clone();
-            let matrix_value4 = b[1][j].clone();
-            thread::spawn(move || {
-                tx.send((matrix_value1 * matrix_value2).clone()).unwrap()
-            });
-            thread::spawn(move || {
-                tp.send((matrix_value3 * matrix_value4).clone()).unwrap()
-            });
-            let matrix1 = rx.recv().unwrap();
-            let matrix2 = rp.recv().unwrap();
-            matrix1 + matrix2
-        })
-    });
-    c
+// Get the final value
+fn fibonacci(nth: u128) -> BigUint {
+    fib(nth).0
 }
 
-fn matrix_power(mut base: [[BigUint; 2]; 2], mut exp: u128) -> [[BigUint; 2]; 2] {
-    let mut result: [[BigUint; 2]; 2] = [
-        [BigUint::zero(), BigUint::one()],
-        [BigUint::one(), BigUint::zero()],
-    ];
-    while exp > 0 {
-        if exp % 2 == 1 {
-            result = matrix_multiply(&result, &base);
-        }
-        base = matrix_multiply(&base, &base);
-        exp /= 2;
+// Head recursion
+fn fib(nth: u128) -> (BigUint, BigUint) {
+    // Break recursion if fib reaches zero
+    if nth == 0 {
+        return (0u8.into(), 1u8.into());
     }
-    result
-}
+    // Would number divide evenly by 2?
+    let modulo_rem = nth % 2;
+    // Subtract nth by modulo rem and divide by 2 to do floor division
+    let (a, b): (BigUint, BigUint) = fib((nth - modulo_rem) / 2u128);
 
-fn fibonacci(n: u128) -> BigUint {
-    if n == 0 {
-        return BigUint::zero();
+    // Algorithm...
+    let c = &a * (&b * 2u8 - &a);
+    let d = &a * &a + &b * &b;
+
+    if modulo_rem == 1 {
+        let summed = c + &d;
+        return (d, summed);
+    } else {
+        return (c, d);
     }
-    let fib_matrix = [
-        [BigUint::one(), BigUint::one()],
-        [BigUint::one(), BigUint::zero()],
-    ];
-    let result_matrix = matrix_power(fib_matrix, n);
-    result_matrix[0][0].clone()
 }
 
 fn main() {
