@@ -42,7 +42,7 @@ fn matrix_multiply(a: &[[BigUint; 2]; 2], b: &[[BigUint; 2]; 2]) -> [[BigUint; 2
 }
 
 fn matrix_power(mut base: [[BigUint; 2]; 2], mut exp: u128) -> [[BigUint; 2]; 2] {
-    let mut result = [
+    let mut result: [[BigUint; 2]; 2] = [
         [BigUint::zero(), BigUint::one()],
         [BigUint::one(), BigUint::zero()],
     ];
